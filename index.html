@@ -39,6 +39,15 @@
             animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        /* Floating +10 points text animation */
+        @keyframes floatPoints {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
+        }
+        .animate-points {
+            animation: floatPoints 0.8s ease-out forwards;
+        }
+
         /* Custom scrollbar for game elements */
         ::-webkit-scrollbar {
             width: 8px;
@@ -173,7 +182,7 @@
                         <i class="fa-solid fa-trophy text-amber-500 text-xl"></i>
                         <div class="text-left">
                             <div id="lbl-best-score" class="text-[11px] font-bold text-slate-400 uppercase">Najlepszy wynik</div>
-                            <div class="text-lg font-black text-amber-600"><span id="top-score-val">0</span></div>
+                            <div class="text-lg font-black text-amber-600"><span id="top-score-val">0</span> pkt</div>
                         </div>
                     </div>
                     <div class="bg-white/80 p-2 rounded-xl border border-amber-100 shadow-sm flex items-center justify-center space-x-2">
@@ -193,7 +202,12 @@
             </div>
 
             <!-- ================= GAMEPLAY SCREEN ================= -->
-            <div id="screen-game" class="p-6 md:p-8 flex flex-col hidden space-y-5">
+            <div id="screen-game" class="p-6 md:p-8 flex flex-col hidden space-y-5 relative">
+                <!-- Floating animation target for added points -->
+                <div id="points-popup" class="absolute top-12 left-1/2 -translate-x-1/2 text-emerald-500 font-black text-2xl pointer-events-none opacity-0 z-50">
+                    +10 pkt!
+                </div>
+
                 <!-- Top Status Bar & Exit Button -->
                 <div class="flex justify-between items-center bg-slate-100 p-2.5 rounded-2xl">
                     <button onclick="exitToMenu()" id="btn-exit" class="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
@@ -203,7 +217,7 @@
 
                     <div class="flex items-center space-x-1.5 text-amber-500 font-extrabold text-base md:text-lg">
                         <i class="fa-solid fa-star"></i>
-                        <span id="score-val">0</span>
+                        <span id="score-val">0</span> <span class="text-xs text-amber-600">pkt</span>
                     </div>
 
                     <div class="text-slate-500 font-bold text-xs md:text-sm tracking-wider">
@@ -261,8 +275,8 @@
                 <!-- Stats summary box -->
                 <div class="bg-slate-50 border-2 border-slate-200 w-full rounded-2xl p-4 grid grid-cols-2 gap-4">
                     <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                        <div id="lbl-stat-score" class="text-xs font-bold text-slate-400 uppercase mb-1">Wynik</div>
-                        <div class="text-3xl font-black text-indigo-600"><span id="final-score">0</span></div>
+                        <div id="lbl-stat-score" class="text-xs font-bold text-slate-400 uppercase mb-1">Zdobyte punkty</div>
+                        <div class="text-3xl font-black text-indigo-600"><span id="final-score">0</span> <span class="text-lg">pkt</span></div>
                     </div>
                     <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
                         <div id="lbl-stat-streak" class="text-xs font-bold text-slate-400 uppercase mb-1">Najlepsza seria</div>
@@ -307,7 +321,7 @@
                 resultMsgPerf: "Giga sukces! Odpowiedziałeś bezbłędnie na wszystkie pytania!",
                 resultMsgGood: "Poszło Ci świetnie! Jeszcze trochę i osiągniesz perfekcję!",
                 resultMsgTry: "Ćwiczenie czyni mistrza! Zagraj jeszcze raz!",
-                statScore: "Twój wynik",
+                statScore: "Zdobyte punkty",
                 statStreak: "Najlepsza seria",
                 btnRestart: "Zagraj ponownie"
             },
@@ -336,7 +350,7 @@
                 resultMsgPerf: "Perfect score! You got every question right!",
                 resultMsgGood: "Awesome effort! Almost a perfect score!",
                 resultMsgTry: "Practice makes perfect! Try again!",
-                statScore: "Final Score",
+                statScore: "Total Points",
                 statStreak: "Best Streak",
                 btnRestart: "Play Again"
             },
@@ -378,7 +392,8 @@
         let selectedOp = 'add';
         let currentQuestion = 0;
         let totalQuestions = 10;
-        let score = 0;
+        let score = 0; // Cumulative Points (10 pts per correct answer)
+        let correctAnswersCount = 0;
         let currentStreak = 0;
         let maxStreak = 0;
         let currentAnswer = 0;
@@ -544,6 +559,7 @@
         function startQuiz() {
             currentQuestion = 0;
             score = 0;
+            correctAnswersCount = 0;
             currentStreak = 0;
             maxStreak = 0;
 
@@ -676,6 +692,13 @@
             }
         }
 
+        function showFloatingPoints() {
+            const popup = document.getElementById('points-popup');
+            popup.classList.remove('animate-points');
+            void popup.offsetWidth; // Trigger reflow
+            popup.classList.add('animate-points');
+        }
+
         /* Check Answer */
         function submitAnswer() {
             if (userInputValue === "") return;
@@ -684,14 +707,17 @@
             const equationCard = document.getElementById('equation-display').parentElement;
 
             if (userNum === currentAnswer) {
-                // Correct Answer!
+                // Correct Answer! (+10 Points)
                 playSuccessSound();
-                score++;
+                score += 10;
+                correctAnswersCount++;
                 currentStreak++;
                 if (currentStreak > maxStreak) maxStreak = currentStreak;
 
                 document.getElementById('score-val').innerText = score;
                 document.getElementById('streak-val').innerText = currentStreak;
+
+                showFloatingPoints();
 
                 // Visual flash feedback
                 equationCard.classList.add('bg-emerald-100', 'border-emerald-300', 'pop-effect');
@@ -701,7 +727,7 @@
                 }, 600);
 
             } else {
-                // Wrong Answer!
+                // Wrong Answer! (+0 Points)
                 playErrorSound();
                 currentStreak = 0;
                 document.getElementById('streak-val').innerText = currentStreak;
@@ -735,16 +761,10 @@
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-result').classList.remove('hidden');
 
-            const finalScoreEl = document.getElementById('final-score');
-            if (selectedMode === '10q') {
-                finalScoreEl.innerText = `${score} / 10`;
-            } else {
-                finalScoreEl.innerText = `${score}`;
-            }
-
+            document.getElementById('final-score').innerText = score;
             document.getElementById('final-streak').innerText = maxStreak;
 
-            // Save score to LocalStorage
+            // Save high score (points) to LocalStorage
             updateHighScores(score, maxStreak);
 
             const t = translations[currentLang];
@@ -752,12 +772,12 @@
             const msgEl = document.getElementById('txt-result-msg');
             const emojiEl = document.getElementById('result-emoji');
 
-            if (selectedMode === '10q' && score === 10) {
+            if (selectedMode === '10q' && score === 100) {
                 titleEl.innerText = t.resultTitlePerf;
                 msgEl.innerText = t.resultMsgPerf;
                 emojiEl.innerText = "🏆🎉🌟";
                 triggerConfetti();
-            } else if (score >= 7) {
+            } else if (score >= 70) {
                 titleEl.innerText = t.resultTitleGood;
                 msgEl.innerText = t.resultMsgGood;
                 emojiEl.innerText = "👏🎈✨";
