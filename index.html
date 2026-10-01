@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Kids Quiz / Quiz Matematyczny</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for cute rounded typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(135deg, #a8edf0 0%, #fed6e3 100%);
+            min-height: 100vh;
+        }
+
+        /* Cute floating animation for elements */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Pulse animation for feedback buttons */
+        @keyframes pop {
+            0% { transform: scale(0.95); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pop-effect {
+            animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Custom scrollbar for game elements */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-800 antialiased selection:bg-pink-300">
+
+    <!-- Top Header & Language Bar -->
+    <header class="w-full max-w-4xl mx-auto p-4 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center space-x-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-md">
+            <i class="fa-solid fa-star text-amber-400 text-2xl animate-spin" style="animation-duration: 8s;"></i>
+            <span class="font-bold text-lg text-indigo-600 tracking-wide" id="app-title">Math Quiz</span>
+        </div>
+
+        <!-- Language Switcher Buttons -->
+        <div class="flex items-center space-x-2 bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-md">
+            <button onclick="setLanguage('pl')" id="lang-pl" class="px-3 py-1.5 rounded-full text-sm font-bold transition-all duration-200 hover:bg-indigo-100 flex items-center gap-1.5">
+                <span>🇵🇱</span> Polski
+            </button>
+            <button onclick="setLanguage('en')" id="lang-en" class="px-3 py-1.5 rounded-full text-sm font-bold transition-all duration-200 hover:bg-indigo-100 flex items-center gap-1.5">
+                <span>🇬🇧</span> English
+            </button>
+            <button onclick="setLanguage('ja')" id="lang-ja" class="px-3 py-1.5 rounded-full text-sm font-bold transition-all duration-200 hover:bg-indigo-100 flex items-center gap-1.5">
+                <span>🇯🇵</span> 日本語
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="w-full max-w-xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border-4 border-white overflow-hidden relative transition-all duration-300">
+
+            <!-- ================= START SCREEN / SETTINGS ================= -->
+            <div id="screen-start" class="p-6 md:p-8 flex flex-col items-center text-center space-y-6">
+                <div class="animate-float">
+                    <span class="text-6xl md:text-7xl">✏️🎨📐</span>
+                </div>
+
+                <div>
+                    <h1 id="txt-welcome" class="text-3xl md:text-4xl font-extrabold text-indigo-600 mb-2">Szkoła Matematyki!</h1>
+                    <p id="txt-subtitle" class="text-slate-500 font-semibold text-base md:text-lg">Wybierz opcje i rozpocznij przygodę!</p>
+                </div>
+
+                <div class="w-full space-y-5 text-left">
+                    <!-- Game Mode Selector -->
+                    <div>
+                        <label id="lbl-mode" class="block font-bold text-slate-700 mb-2 text-center text-md flex items-center justify-center gap-2">
+                            <span class="text-indigo-600">🎮</span>
+                            <span id="txt-mode-title">Tryb Gry:</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="selectMode('10q')" id="btn-mode-10q" class="mode-opt p-3 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center justify-center gap-1">
+                                <span class="text-lg">🎯</span>
+                                <span id="txt-mode-10q" class="text-xs md:text-sm">10 Pytań</span>
+                            </button>
+                            <button onclick="selectMode('time')" id="btn-mode-time" class="mode-opt p-3 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center justify-center gap-1">
+                                <span class="text-lg">⏱️</span>
+                                <span id="txt-mode-time" class="text-xs md:text-sm">Na Czas (60s)</span>
+                            </button>
+                            <button onclick="selectMode('endless')" id="btn-mode-endless" class="mode-opt p-3 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center justify-center gap-1">
+                                <span class="text-lg">♾️</span>
+                                <span id="txt-mode-endless" class="text-xs md:text-sm">Bez Końca</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- First Number Digits Selector -->
+                    <div>
+                        <label id="lbl-digits1" class="block font-bold text-slate-700 mb-2 text-center text-md">Pierwsza liczba (cyfry):</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="selectDigits(1, 1)" id="btn-digit1-1" class="digit1-opt p-2.5 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center">
+                                <span class="text-lg">1</span>
+                                <span class="text-[10px] text-indigo-400 font-normal">(1 - 9)</span>
+                            </button>
+                            <button onclick="selectDigits(1, 2)" id="btn-digit1-2" class="digit1-opt p-2.5 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center">
+                                <span class="text-lg">2</span>
+                                <span class="text-[10px] text-indigo-400 font-normal">(10 - 99)</span>
+                            </button>
+                            <button onclick="selectDigits(1, 3)" id="btn-digit1-3" class="digit1-opt p-2.5 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center">
+                                <span class="text-lg">3</span>
+                                <span class="text-[10px] text-indigo-400 font-normal">(100 - 999)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Second Number Digits Selector -->
+                    <div>
+                        <label id="lbl-digits2" class="block font-bold text-slate-700 mb-2 text-center text-md">Druga liczba (cyfry):</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="selectDigits(2, 1)" id="btn-digit2-1" class="digit2-opt p-2.5 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center">
+                                <span class="text-lg">1</span>
+                                <span class="text-[10px] text-indigo-400 font-normal">(1 - 9)</span>
+                            </button>
+                            <button onclick="selectDigits(2, 2)" id="btn-digit2-2" class="digit2-opt p-2.5 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center">
+                                <span class="text-lg">2</span>
+                                <span class="text-[10px] text-indigo-400 font-normal">(10 - 99)</span>
+                            </button>
+                            <button onclick="selectDigits(2, 3)" id="btn-digit2-3" class="digit2-opt p-2.5 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-center transition-all shadow-sm flex flex-col items-center">
+                                <span class="text-lg">3</span>
+                                <span class="text-[10px] text-indigo-400 font-normal">(100 - 999)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Operation Selector -->
+                    <div>
+                        <label id="lbl-op" class="block font-bold text-slate-700 mb-2 text-center text-md">Rodzaj zadań:</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="selectOp('add')" id="btn-op-add" class="op-opt p-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-center transition-all shadow-sm">
+                                <span class="text-2xl block mb-1">➕</span>
+                                <span id="txt-op-add" class="text-xs md:text-sm">Dodawanie</span>
+                            </button>
+                            <button onclick="selectOp('sub')" id="btn-op-sub" class="op-opt p-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-center transition-all shadow-sm">
+                                <span class="text-2xl block mb-1">➖</span>
+                                <span id="txt-op-sub" class="text-xs md:text-sm">Odejmowanie</span>
+                            </button>
+                            <button onclick="selectOp('mix')" id="btn-op-mix" class="op-opt p-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-center transition-all shadow-sm">
+                                <span class="text-2xl block mb-1">🔀</span>
+                                <span id="txt-op-mix" class="text-xs md:text-sm">Miks</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Best Score & Streak Display -->
+                <div class="bg-amber-50 border-2 border-amber-200 w-full rounded-2xl p-3 grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-white/80 p-2 rounded-xl border border-amber-100 shadow-sm flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-trophy text-amber-500 text-xl"></i>
+                        <div class="text-left">
+                            <div id="lbl-best-score" class="text-[11px] font-bold text-slate-400 uppercase">Najlepszy wynik</div>
+                            <div class="text-lg font-black text-amber-600"><span id="top-score-val">0</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-white/80 p-2 rounded-xl border border-amber-100 shadow-sm flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-fire text-orange-500 text-xl"></i>
+                        <div class="text-left">
+                            <div id="lbl-best-streak" class="text-[11px] font-bold text-slate-400 uppercase">Rekord serii</div>
+                            <div class="text-lg font-black text-orange-500"><span id="top-streak-val">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Start Button -->
+                <button onclick="startQuiz()" id="btn-start" class="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold text-xl rounded-2xl shadow-lg transform active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i>
+                    <span id="txt-btn-start">Start!</span>
+                </button>
+            </div>
+
+            <!-- ================= GAMEPLAY SCREEN ================= -->
+            <div id="screen-game" class="p-6 md:p-8 flex flex-col hidden space-y-5">
+                <!-- Top Status Bar & Exit Button -->
+                <div class="flex justify-between items-center bg-slate-100 p-2.5 rounded-2xl">
+                    <button onclick="exitToMenu()" id="btn-exit" class="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-door-open"></i>
+                        <span id="txt-btn-exit">Menu</span>
+                    </button>
+
+                    <div class="flex items-center space-x-1.5 text-amber-500 font-extrabold text-base md:text-lg">
+                        <i class="fa-solid fa-star"></i>
+                        <span id="score-val">0</span>
+                    </div>
+
+                    <div class="text-slate-500 font-bold text-xs md:text-sm tracking-wider">
+                        <span id="lbl-question-count">Pytanie</span> <span id="curr-q-num" class="text-indigo-600 font-extrabold">1</span><span id="max-q-display"> / 10</span>
+                    </div>
+
+                    <div class="flex items-center space-x-1.5 text-orange-500 font-extrabold text-base md:text-lg">
+                        <i class="fa-solid fa-fire animate-bounce"></i>
+                        <span id="streak-val">0</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar / Timer Bar -->
+                <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-pink-500 h-full w-0 transition-all duration-300 rounded-full"></div>
+                </div>
+
+                <!-- Mathematical Equation Card -->
+                <div class="bg-indigo-50 border-4 border-indigo-100 rounded-3xl p-5 text-center shadow-inner relative flex flex-col items-center justify-center min-h-[130px]">
+                    <div id="equation-display" class="text-3xl sm:text-4xl md:text-5xl font-black text-indigo-900 tracking-wider flex items-center justify-center gap-2 md:gap-3 flex-wrap">
+                        <span id="num1">0</span>
+                        <span id="operator" class="text-pink-500">+</span>
+                        <span id="num2">0</span>
+                        <span>=</span>
+                        <span id="user-answer-display" class="inline-block min-w-[65px] border-b-4 border-indigo-500 text-indigo-600 bg-white px-3 py-1 rounded-xl shadow-sm text-center">?</span>
+                    </div>
+                </div>
+
+                <!-- On-Screen Keypad for Easy Touch Input -->
+                <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto w-full">
+                    <button onclick="pressNum('1')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">1</button>
+                    <button onclick="pressNum('2')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">2</button>
+                    <button onclick="pressNum('3')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">3</button>
+                    <button onclick="pressNum('4')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">4</button>
+                    <button onclick="pressNum('5')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">5</button>
+                    <button onclick="pressNum('6')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">6</button>
+                    <button onclick="pressNum('7')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">7</button>
+                    <button onclick="pressNum('8')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">8</button>
+                    <button onclick="pressNum('9')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">9</button>
+                    <button onclick="pressDelete()" class="bg-rose-100 hover:bg-rose-200 text-rose-600 font-extrabold text-xl py-3 rounded-2xl shadow border border-rose-200 active:scale-95 transition flex items-center justify-center">⌫</button>
+                    <button onclick="pressNum('0')" class="num-btn bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-2xl py-3 rounded-2xl shadow border border-slate-200 active:bg-indigo-100 active:scale-95 transition">0</button>
+                    <button onclick="submitAnswer()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xl py-3 rounded-2xl shadow active:scale-95 transition flex items-center justify-center">✓</button>
+                </div>
+            </div>
+
+            <!-- ================= RESULTS SCREEN ================= -->
+            <div id="screen-result" class="p-6 md:p-8 flex flex-col items-center text-center space-y-6 hidden">
+                <div id="result-emoji" class="text-7xl animate-bounce">🏆</div>
+
+                <div>
+                    <h2 id="txt-result-title" class="text-3xl font-extrabold text-indigo-600 mb-1">Super! Koniec quizu!</h2>
+                    <p id="txt-result-msg" class="text-slate-500 font-semibold text-lg">Jesteś mistrzem matematyki!</p>
+                </div>
+
+                <!-- Stats summary box -->
+                <div class="bg-slate-50 border-2 border-slate-200 w-full rounded-2xl p-4 grid grid-cols-2 gap-4">
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                        <div id="lbl-stat-score" class="text-xs font-bold text-slate-400 uppercase mb-1">Wynik</div>
+                        <div class="text-3xl font-black text-indigo-600"><span id="final-score">0</span></div>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                        <div id="lbl-stat-streak" class="text-xs font-bold text-slate-400 uppercase mb-1">Najlepsza seria</div>
+                        <div class="text-3xl font-black text-orange-500"><span id="final-streak">0</span> 🔥</div>
+                    </div>
+                </div>
+
+                <!-- Restart Button -->
+                <button onclick="resetToStart()" id="btn-restart" class="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xl rounded-2xl shadow-lg transform active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span id="txt-btn-restart">Zagraj ponownie</span>
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const translations = {
+            pl: {
+                appTitle: "Matematyczna Przygoda",
+                welcome: "Szkoła Matematyki!",
+                subtitle: "Wybierz opcje i rozpocznij przygodę!",
+                modeTitle: "Tryb Gry:",
+                mode10q: "10 Pytań",
+                modeTime: "Na Czas (60s)",
+                modeEndless: "Bez Końca",
+                digitsLbl1: "Pierwsza liczba (cyfry):",
+                digitsLbl2: "Druga liczba (cyfry):",
+                opLbl: "Rodzaj zadań:",
+                opAdd: "Dodawanie",
+                opSub: "Odejmowanie",
+                opMix: "Miks (+ i -)",
+                bestScore: "Najlepszy wynik",
+                bestStreak: "Rekord serii",
+                btnStart: "Rozpocznij Quiz!",
+                questionLbl: "Pytanie",
+                btnExit: "Wyjdź",
+                resultTitlePerf: "Niesamowicie! 🌟",
+                resultTitleGood: "Dobra robota! 🎉",
+                resultTitleTry: "Próbuj dalej! 💪",
+                resultMsgPerf: "Giga sukces! Odpowiedziałeś bezbłędnie na wszystkie pytania!",
+                resultMsgGood: "Poszło Ci świetnie! Jeszcze trochę i osiągniesz perfekcję!",
+                resultMsgTry: "Ćwiczenie czyni mistrza! Zagraj jeszcze raz!",
+                statScore: "Twój wynik",
+                statStreak: "Najlepsza seria",
+                btnRestart: "Zagraj ponownie"
+            },
+            en: {
+                appTitle: "Math Adventure",
+                welcome: "Math Academy!",
+                subtitle: "Choose your options and start learning!",
+                modeTitle: "Game Mode:",
+                mode10q: "10 Questions",
+                modeTime: "Timed (60s)",
+                modeEndless: "Endless",
+                digitsLbl1: "First number (digits):",
+                digitsLbl2: "Second number (digits):",
+                opLbl: "Operation type:",
+                opAdd: "Addition",
+                opSub: "Subtraction",
+                opMix: "Mixed (+ & -)",
+                bestScore: "Best Score",
+                bestStreak: "Streak Record",
+                btnStart: "Start Quiz!",
+                questionLbl: "Question",
+                btnExit: "Menu",
+                resultTitlePerf: "Amazing! 🌟",
+                resultTitleGood: "Great Job! 🎉",
+                resultTitleTry: "Keep Trying! 💪",
+                resultMsgPerf: "Perfect score! You got every question right!",
+                resultMsgGood: "Awesome effort! Almost a perfect score!",
+                resultMsgTry: "Practice makes perfect! Try again!",
+                statScore: "Final Score",
+                statStreak: "Best Streak",
+                btnRestart: "Play Again"
+            },
+            ja: {
+                appTitle: "たのしい さんすう",
+                welcome: "さんすう クイズ!",
+                subtitle: "えらんで スタート しよう!",
+                modeTitle: "ゲーム モード:",
+                mode10q: "10 もんだい",
+                modeTime: "じかん せい (60びょう)",
+                modeEndless: "むげん",
+                digitsLbl1: "1つめの かず (けた):",
+                digitsLbl2: "2つめの かず (けた):",
+                opLbl: "けいさん の しゅるい:",
+                opAdd: "たしざん",
+                opSub: "ひきざん",
+                opMix: "ぜんぶ",
+                bestScore: "さいこう とくてん",
+                bestStreak: "れんぞく きろく",
+                btnStart: "スタート!",
+                questionLbl: "もんだい",
+                btnExit: "もどる",
+                resultTitlePerf: "パーフェクト! 🌟",
+                resultTitleGood: "すごいね! 🎉",
+                resultTitleTry: "もういちど! 💪",
+                resultMsgPerf: "ぜんぶ せいかい! きみは さんすう マスターだね!",
+                resultMsgGood: "とても よく できました! あと すこし!",
+                resultMsgTry: "れんしゅう すれば っと できるよう になるよ!",
+                statScore: "とくてん",
+                statStreak: "さいこう れんぞく",
+                btnRestart: "もういちど あそぶ"
+            }
+        };
+
+        let currentLang = 'en';
+        let selectedMode = '10q'; // '10q', 'time', 'endless'
+        let selectedDigits1 = 1;
+        let selectedDigits2 = 1;
+        let selectedOp = 'add';
+        let currentQuestion = 0;
+        let totalQuestions = 10;
+        let score = 0;
+        let currentStreak = 0;
+        let maxStreak = 0;
+        let currentAnswer = 0;
+        let userInputValue = "";
+        
+        // Timer variables for timed mode
+        let timerInterval = null;
+        let timeRemaining = 60;
+
+        /* Audio Tone Generators */
+        function playTone(freq, duration, type = 'sine') {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {
+                // Ignore audio context errors on unsupported devices
+            }
+        }
+
+        function playSuccessSound() {
+            playTone(523.25, 0.1); // C5
+            setTimeout(() => playTone(659.25, 0.15), 100); // E5
+            setTimeout(() => playTone(783.99, 0.25), 200); // G5
+        }
+
+        function playErrorSound() {
+            playTone(220, 0.15, 'sawtooth'); // A3
+            setTimeout(() => playTone(180, 0.25, 'sawtooth'), 120);
+        }
+
+        /* Detect Browser Language */
+        function detectBrowserLanguage() {
+            const navLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+            if (navLang.startsWith('pl')) {
+                return 'pl';
+            } else if (navLang.startsWith('ja')) {
+                return 'ja';
+            } else {
+                return 'en'; // Default fallback
+            }
+        }
+
+        /* Set Language & Update UI Labels */
+        function setLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+
+            // Update Header & Start Screen Labels
+            document.getElementById('app-title').innerText = t.appTitle;
+            document.getElementById('txt-welcome').innerText = t.welcome;
+            document.getElementById('txt-subtitle').innerText = t.subtitle;
+            document.getElementById('txt-mode-title').innerText = t.modeTitle;
+            document.getElementById('txt-mode-10q').innerText = t.mode10q;
+            document.getElementById('txt-mode-time').innerText = t.modeTime;
+            document.getElementById('txt-mode-endless').innerText = t.modeEndless;
+            document.getElementById('lbl-digits1').innerText = t.digitsLbl1;
+            document.getElementById('lbl-digits2').innerText = t.digitsLbl2;
+            document.getElementById('lbl-op').innerText = t.opLbl;
+            document.getElementById('txt-op-add').innerText = t.opAdd;
+            document.getElementById('txt-op-sub').innerText = t.opSub;
+            document.getElementById('txt-op-mix').innerText = t.opMix;
+            document.getElementById('lbl-best-score').innerText = t.bestScore;
+            document.getElementById('lbl-best-streak').innerText = t.bestStreak;
+            document.getElementById('txt-btn-start').innerText = t.btnStart;
+
+            // Update Gameplay & Results Labels
+            document.getElementById('lbl-question-count').innerText = t.questionLbl;
+            document.getElementById('txt-btn-exit').innerText = t.btnExit;
+            document.getElementById('lbl-stat-score').innerText = t.statScore;
+            document.getElementById('lbl-stat-streak').innerText = t.statStreak;
+            document.getElementById('txt-btn-restart').innerText = t.btnRestart;
+
+            // Highlight Active Language Button
+            ['pl', 'en', 'ja'].forEach(l => {
+                const btn = document.getElementById(`lang-${l}`);
+                if (l === lang) {
+                    btn.className = "px-3 py-1.5 rounded-full text-sm font-bold bg-indigo-600 text-white shadow-sm flex items-center gap-1.5";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 transition-all flex items-center gap-1.5";
+                }
+            });
+        }
+
+        /* Load High Scores from LocalStorage */
+        function loadHighScores() {
+            const topScore = localStorage.getItem('math_quiz_top_score') || 0;
+            const topStreak = localStorage.getItem('math_quiz_top_streak') || 0;
+            document.getElementById('top-score-val').innerText = topScore;
+            document.getElementById('top-streak-val').innerText = topStreak;
+        }
+
+        /* Update High Scores in LocalStorage */
+        function updateHighScores(finalScore, finalStreak) {
+            let topScore = parseInt(localStorage.getItem('math_quiz_top_score') || '0', 10);
+            let topStreak = parseInt(localStorage.getItem('math_quiz_top_streak') || '0', 10);
+
+            if (finalScore > topScore) {
+                topScore = finalScore;
+                localStorage.setItem('math_quiz_top_score', topScore);
+            }
+            if (finalStreak > topStreak) {
+                topStreak = finalStreak;
+                localStorage.setItem('math_quiz_top_streak', topStreak);
+            }
+            loadHighScores();
+        }
+
+        /* Handle Game Mode Selector */
+        function selectMode(mode) {
+            selectedMode = mode;
+            ['10q', 'time', 'endless'].forEach(val => {
+                const btn = document.getElementById(`btn-mode-${val}`);
+                if (val === mode) {
+                    btn.classList.add('border-indigo-600', 'bg-indigo-100', 'ring-2', 'ring-indigo-400');
+                } else {
+                    btn.classList.remove('border-indigo-600', 'bg-indigo-100', 'ring-2', 'ring-indigo-400');
+                }
+            });
+        }
+
+        /* Handle Digits Selector for Operand 1 or Operand 2 */
+        function selectDigits(targetNum, digits) {
+            if (targetNum === 1) {
+                selectedDigits1 = digits;
+            } else {
+                selectedDigits2 = digits;
+            }
+
+            const prefix = targetNum === 1 ? 'btn-digit1-' : 'btn-digit2-';
+            [1, 2, 3].forEach(val => {
+                const btn = document.getElementById(`${prefix}${val}`);
+                if (val === digits) {
+                    btn.classList.add('border-indigo-600', 'bg-indigo-100', 'ring-2', 'ring-indigo-400');
+                } else {
+                    btn.classList.remove('border-indigo-600', 'bg-indigo-100', 'ring-2', 'ring-indigo-400');
+                }
+            });
+        }
+
+        /* Handle Operation Selector */
+        function selectOp(op) {
+            selectedOp = op;
+            ['add', 'sub', 'mix'].forEach(val => {
+                const btn = document.getElementById(`btn-op-${val}`);
+                if (val === op) {
+                    btn.classList.add('border-emerald-600', 'bg-emerald-100', 'ring-2', 'ring-emerald-400');
+                } else {
+                    btn.classList.remove('border-emerald-600', 'bg-emerald-100', 'ring-2', 'ring-emerald-400');
+                }
+            });
+        }
+
+        /* Start Quiz Session */
+        function startQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            currentStreak = 0;
+            maxStreak = 0;
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('streak-val').innerText = currentStreak;
+
+            // Configure UI according to selected mode
+            const maxQDisplay = document.getElementById('max-q-display');
+            const progressBar = document.getElementById('progress-bar');
+
+            if (selectedMode === '10q') {
+                totalQuestions = 10;
+                maxQDisplay.innerText = " / 10";
+                progressBar.style.width = '0%';
+            } else if (selectedMode === 'time') {
+                timeRemaining = 60;
+                maxQDisplay.innerText = "";
+                progressBar.style.width = '100%';
+                startTimer();
+            } else if (selectedMode === 'endless') {
+                maxQDisplay.innerText = " / ∞";
+                progressBar.style.width = '100%';
+            }
+
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+
+            nextQuestion();
+        }
+
+        function startTimer() {
+            const progressBar = document.getElementById('progress-bar');
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                const pct = (timeRemaining / 60) * 100;
+                progressBar.style.width = `${pct}%`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        /* Exit In-Quiz Back to Menu */
+        function exitToMenu() {
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-start').classList.remove('hidden');
+            loadHighScores();
+        }
+
+        /* Generate Random Numbers based on selected digits */
+        function getRandomNumber(digits) {
+            if (digits === 1) return Math.floor(Math.random() * 9) + 1; // 1 - 9
+            if (digits === 2) return Math.floor(Math.random() * 90) + 10; // 10 - 99
+            if (digits === 3) return Math.floor(Math.random() * 900) + 100; // 100 - 999
+            return 1;
+        }
+
+        /* Load Next Question */
+        function nextQuestion() {
+            if (selectedMode === '10q' && currentQuestion >= totalQuestions) {
+                endQuiz();
+                return;
+            }
+
+            currentQuestion++;
+            userInputValue = "";
+            updateAnswerDisplay();
+
+            document.getElementById('curr-q-num').innerText = currentQuestion;
+
+            if (selectedMode === '10q') {
+                document.getElementById('progress-bar').style.width = `${((currentQuestion - 1) / totalQuestions) * 100}%`;
+            }
+
+            // Determine actual operation (+ or -)
+            let isAddition = true;
+            if (selectedOp === 'add') isAddition = true;
+            else if (selectedOp === 'sub') isAddition = false;
+            else isAddition = Math.random() < 0.5;
+
+            let n1 = getRandomNumber(selectedDigits1);
+            let n2 = getRandomNumber(selectedDigits2);
+
+            // Crucial: For subtraction, ensure result is non-negative (n1 >= n2)
+            if (!isAddition) {
+                if (n1 < n2) {
+                    let temp = n1;
+                    n1 = n2;
+                    n2 = temp;
+                }
+                currentAnswer = n1 - n2;
+                document.getElementById('operator').innerText = "-";
+            } else {
+                currentAnswer = n1 + n2;
+                document.getElementById('operator').innerText = "+";
+            }
+
+            document.getElementById('num1').innerText = n1;
+            document.getElementById('num2').innerText = n2;
+        }
+
+        /* Input Controls */
+        function pressNum(digit) {
+            if (userInputValue.length < 5) {
+                userInputValue += digit;
+                updateAnswerDisplay();
+            }
+        }
+
+        function pressDelete() {
+            userInputValue = userInputValue.slice(0, -1);
+            updateAnswerDisplay();
+        }
+
+        function updateAnswerDisplay() {
+            const display = document.getElementById('user-answer-display');
+            if (userInputValue === "") {
+                display.innerText = "?";
+                display.classList.add('text-indigo-300');
+                display.classList.remove('text-indigo-600');
+            } else {
+                display.innerText = userInputValue;
+                display.classList.remove('text-indigo-300');
+                display.classList.add('text-indigo-600');
+            }
+        }
+
+        /* Check Answer */
+        function submitAnswer() {
+            if (userInputValue === "") return;
+
+            const userNum = parseInt(userInputValue, 10);
+            const equationCard = document.getElementById('equation-display').parentElement;
+
+            if (userNum === currentAnswer) {
+                // Correct Answer!
+                playSuccessSound();
+                score++;
+                currentStreak++;
+                if (currentStreak > maxStreak) maxStreak = currentStreak;
+
+                document.getElementById('score-val').innerText = score;
+                document.getElementById('streak-val').innerText = currentStreak;
+
+                // Visual flash feedback
+                equationCard.classList.add('bg-emerald-100', 'border-emerald-300', 'pop-effect');
+                setTimeout(() => {
+                    equationCard.classList.remove('bg-emerald-100', 'border-emerald-300', 'pop-effect');
+                    nextQuestion();
+                }, 600);
+
+            } else {
+                // Wrong Answer!
+                playErrorSound();
+                currentStreak = 0;
+                document.getElementById('streak-val').innerText = currentStreak;
+
+                // Shake & error feedback
+                equationCard.classList.add('bg-rose-100', 'border-rose-300');
+                setTimeout(() => {
+                    equationCard.classList.remove('bg-rose-100', 'border-rose-300');
+                    nextQuestion();
+                }, 750);
+            }
+        }
+
+        /* Keyboard Listener */
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('screen-game').classList.contains('hidden')) return;
+
+            if (e.key >= '0' && e.key <= '9') {
+                pressNum(e.key);
+            } else if (e.key === 'Backspace') {
+                pressDelete();
+            } else if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+
+        /* Finish Quiz & Show Summary */
+        function endQuiz() {
+            if (timerInterval) clearInterval(timerInterval);
+
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            const finalScoreEl = document.getElementById('final-score');
+            if (selectedMode === '10q') {
+                finalScoreEl.innerText = `${score} / 10`;
+            } else {
+                finalScoreEl.innerText = `${score}`;
+            }
+
+            document.getElementById('final-streak').innerText = maxStreak;
+
+            // Save score to LocalStorage
+            updateHighScores(score, maxStreak);
+
+            const t = translations[currentLang];
+            const titleEl = document.getElementById('txt-result-title');
+            const msgEl = document.getElementById('txt-result-msg');
+            const emojiEl = document.getElementById('result-emoji');
+
+            if (selectedMode === '10q' && score === 10) {
+                titleEl.innerText = t.resultTitlePerf;
+                msgEl.innerText = t.resultMsgPerf;
+                emojiEl.innerText = "🏆🎉🌟";
+                triggerConfetti();
+            } else if (score >= 7) {
+                titleEl.innerText = t.resultTitleGood;
+                msgEl.innerText = t.resultMsgGood;
+                emojiEl.innerText = "👏🎈✨";
+                triggerConfetti();
+            } else {
+                titleEl.innerText = t.resultTitleTry;
+                msgEl.innerText = t.resultMsgTry;
+                emojiEl.innerText = "💡🐥👍";
+            }
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function resetToStart() {
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-start').classList.remove('hidden');
+            loadHighScores();
+        }
+
+        window.onload = function() {
+            // Detect and apply default language
+            const initialLang = detectBrowserLanguage();
+            setLanguage(initialLang);
+
+            // Load high scores from localStorage
+            loadHighScores();
+
+            // Set default selections
+            selectMode('10q');
+            selectDigits(1, 1);
+            selectDigits(2, 1);
+            selectOp('add');
+        };
+    </script>
+</body>
+</html>
